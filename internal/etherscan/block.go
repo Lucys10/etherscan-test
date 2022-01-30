@@ -74,7 +74,7 @@ func (b *Block) LoadBlocks() (int64, error) {
 		}
 
 		b.Logs.Info("load block - ", i)
-		time.Sleep(time.Millisecond * 250)
+		time.Sleep(time.Millisecond * 300)
 	}
 
 	if err := b.S.InsertTransInfo(allTransInfo); err != nil {
@@ -222,7 +222,7 @@ func diffBetweenLoadUpdate(s store.Store, logs *logger.Log, lastBlockNum int64, 
 			allTransInfo = append(allTransInfo, ti)
 		}
 
-		time.Sleep(time.Millisecond * 250)
+		time.Sleep(time.Millisecond * 300)
 
 	}
 

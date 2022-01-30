@@ -43,6 +43,16 @@ func main() {
 
 	block := etherscan.NewBlock(s, logs, cfg, quantityBlock)
 
+	go func() {
+		if err := http.ListenAndServe(":"+cfg.Port, r); err != nil {
+			logs.WithFields(logrus.Fields{
+				"package":  "main",
+				"function": "ListenAndServe",
+				"error":    err,
+			}).Fatal("The server is not up")
+		}
+	}()
+
 	lastLoadBlock, err := block.LoadBlocks()
 	if err != nil {
 		logs.WithFields(logrus.Fields{
@@ -52,18 +62,6 @@ func main() {
 		}).Error("Error in func load block")
 	}
 
-	go block.UpdateBlocks(lastLoadBlock)
+	block.UpdateBlocks(lastLoadBlock)
 
-	logs.WithFields(logrus.Fields{
-		"ServerAddress": cfg.Port,
-		"Log_level":     "Info",
-	}).Info("Start service Etherscan")
-
-	if err := http.ListenAndServe(":"+cfg.Port, r); err != nil {
-		logs.WithFields(logrus.Fields{
-			"package":  "main",
-			"function": "ListenAndServe",
-			"error":    err,
-		}).Fatal("The server is not up")
-	}
 }
