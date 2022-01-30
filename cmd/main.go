@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-const quantityBlock int64 = 100
+const quantityBlock int64 = 1000
 
 func main() {
 
