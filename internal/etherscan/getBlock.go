@@ -4,7 +4,7 @@ import (
 	"apietherscan/internal/model"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 )
@@ -18,7 +18,7 @@ func GetBlockNumber(blockNumber string, apiKeyEther string) (int64, error) {
 	}
 	defer r.Body.Close()
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return 0, err
 	}
@@ -45,7 +45,7 @@ func GetBlockByNumber(blockByNumber string, hexValue string, apiKeyEther string)
 	}
 	defer r.Body.Close()
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
 	}
