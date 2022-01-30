@@ -43,7 +43,7 @@ func main() {
 
 	block := etherscan.NewBlock(s, logs, cfg, quantityBlock)
 
-	go func() {
+	go func(cfg *configs.Config) {
 		if err := http.ListenAndServe(":"+cfg.Port, r); err != nil {
 			logs.WithFields(logrus.Fields{
 				"package":  "main",
@@ -51,7 +51,7 @@ func main() {
 				"error":    err,
 			}).Fatal("The server is not up")
 		}
-	}()
+	}(cfg)
 
 	lastLoadBlock, err := block.LoadBlocks()
 	if err != nil {
