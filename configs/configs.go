@@ -3,7 +3,7 @@ package configs
 import "github.com/ilyakaznacheev/cleanenv"
 
 type Config struct {
-	ServerAddr  string `yaml:"ServerAddr" env:"SERVER_ADDR"`
+	Port        string `yaml:"Port" env:"PORT"`
 	MongoPass   string `yaml:"MongoPass" env:"MONGO_PASS"`
 	ApiKeyEther string `yaml:"ApiKeyEther" env:"API_ETHER"`
 }
