@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-const quantityBlock int64 = 1000
+const quantityBlock int64 = 100
 
 func main() {
 
@@ -43,6 +43,8 @@ func main() {
 
 	block := etherscan.NewBlock(s, logs, cfg, quantityBlock)
 
+	// Запускаю в отдельной горутине, так как при deploy на heroku в течении 1 минуте питается установить порт
+	// с переменной окружения, если не получается то приложения падает. А загрузка 1000 блоков занимает около 5 мин +-.
 	go func(cfg *configs.Config) {
 		if err := http.ListenAndServe(":"+cfg.Port, r); err != nil {
 			logs.WithFields(logrus.Fields{
@@ -53,6 +55,7 @@ func main() {
 		}
 	}(cfg)
 
+	// загрузка последних 1000 блоков
 	lastLoadBlock, err := block.LoadBlocks()
 	if err != nil {
 		logs.WithFields(logrus.Fields{
@@ -62,6 +65,7 @@ func main() {
 		}).Error("Error in func load block")
 	}
 
+	// вытаскиваем новые блоки, проверка 1 раз в секунду
 	block.UpdateBlocks(lastLoadBlock)
 
 }

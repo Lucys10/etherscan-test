@@ -19,6 +19,7 @@ func NewMongo(pass string) (*mgo.Session, error) {
 	return conn, nil
 }
 
+// подключения к Mongodb Atlas
 func createConnection(pass string) (*mgo.Session, error) {
 	dialInfo := mgo.DialInfo{Addrs: []string{
 		"etherscan-shard-00-00.iibcf.mongodb.net:27017",

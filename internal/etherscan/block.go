@@ -33,16 +33,19 @@ func NewBlock(s store.Store, logs *logger.Log, cfg *configs.Config, quantityBloc
 
 func (b *Block) LoadBlocks() (int64, error) {
 
+	// получаем текущий блок
 	numBlock, err := GetBlockNumber(api.BlockNumber, b.Cfg.ApiKeyEther)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get block number - %v", err)
 	}
 
+	// цикл от текущего блока для загрузки 1000 последних блоков
 	allTransInfo := make([]interface{}, 0)
 	for i := numBlock - 1; i >= numBlock-b.QuantityBlock; i-- {
 
 		hexValue := fmt.Sprintf("0x%x", i)
 
+		// получаем список транзакций по номеру блока
 		data, err := GetBlockByNumber(api.BlockByNumber, hexValue, b.Cfg.ApiKeyEther)
 		if err != nil {
 			return 0, fmt.Errorf("failed to get block by number - %v", err)
@@ -53,6 +56,7 @@ func (b *Block) LoadBlocks() (int64, error) {
 			return 0, fmt.Errorf("failed unmarshal - %v", err)
 		}
 
+		// в цикле перебираем все транзакции и добавляем в слайс
 		for _, v := range rbn.Result.Transactions {
 			block, err := hexNumberToInt(v.BlockNumber)
 			if err != nil {
@@ -81,20 +85,21 @@ func (b *Block) LoadBlocks() (int64, error) {
 		return 0, fmt.Errorf("failed Insert TransInfo - %v", err)
 	}
 
-	b.Logs.Info("Successful load block")
+	b.Logs.Info("Successful last thousand load block")
 
 	return numBlock, nil
 }
 
 func (b *Block) UpdateBlocks(lastLoadBlock int64) {
 
+	// загрузка 1000 блоков занимает 5 мин +-, поэтому за это время появляются новые блоки и что бы их не
+	// пропустить в отдельной горутине запускаем загрузку этих блоков
 	go diffBetweenLoadUpdate(b.S, b.Logs, lastLoadBlock, b.Cfg)
 
 	var checkBlockNum int64 = 0
 
 	for {
 
-		b.Logs.Info("Start update")
 		numBlock, err := GetBlockNumber(api.BlockNumber, b.Cfg.ApiKeyEther)
 		if err != nil {
 			b.Logs.WithFields(logrus.Fields{
@@ -108,7 +113,7 @@ func (b *Block) UpdateBlocks(lastLoadBlock int64) {
 			checkBlockNum = numBlock
 		}
 
-		b.Logs.Info("Chek block")
+		// проверка когда появиться новый блок, предыдущий загружается в базу
 		if numBlock != checkBlockNum {
 			hexValue := fmt.Sprintf("0x%x", checkBlockNum)
 
@@ -155,14 +160,11 @@ func (b *Block) UpdateBlocks(lastLoadBlock int64) {
 					}).Error("failed insert to mongoDB")
 				}
 			}
-
-			fmt.Println("Load current block - ", checkBlockNum)
-			fmt.Println("Len current block load allTransInfo - ", len(allTransInfo))
+			b.Logs.Infof("Successful load block number - %v", checkBlockNum)
 			checkBlockNum = numBlock
 		}
 
-		b.Logs.Infof("Successful load block number - %v", checkBlockNum)
-		fmt.Println("Current block - ", numBlock)
+		b.Logs.Infof("Current block number - %v", numBlock)
 
 		time.Sleep(time.Second)
 	}
@@ -233,9 +235,7 @@ func diffBetweenLoadUpdate(s store.Store, logs *logger.Log, lastBlockNum int64, 
 			"error":    err,
 		}).Error("failed insert to mongoDB")
 	}
-
-	fmt.Println("Diff allTransInfo to Mongo - success!")
-	fmt.Println("Len diff block allTransInfo - ", len(allTransInfo))
+	logs.Info("Successful different block number")
 }
 
 func hexNumberToInt(hexStr string) (int64, error) {

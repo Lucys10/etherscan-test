@@ -16,9 +16,4 @@ func GetConfig() (*Config, error) {
 		return nil, err
 	}
 	return &config, nil
-
-	//if err := cleanenv.ReadConfig("config.yml",&config); err != nil {
-	//	return nil, err
-	//}
-	//return &config, nil
 }
