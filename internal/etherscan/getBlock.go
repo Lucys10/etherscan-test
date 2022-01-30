@@ -16,7 +16,11 @@ func GetBlockNumber(blockNumber string, apiKeyEther string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Println("Failed close body - ", err)
+		}
+	}()
 
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -25,12 +29,12 @@ func GetBlockNumber(blockNumber string, apiKeyEther string) (int64, error) {
 
 	var rb model.RespBlock
 	if err := json.Unmarshal(data, &rb); err != nil {
-		log.Println(err)
+		return 0, err
 	}
 
 	n, err := hexNumberToInt(rb.Result)
 	if err != nil {
-		log.Println(err)
+		return 0, err
 	}
 
 	return n, nil
@@ -43,7 +47,11 @@ func GetBlockByNumber(blockByNumber string, hexValue string, apiKeyEther string)
 	if err != nil {
 		return nil, err
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Println("Failed close body - ", err)
+		}
+	}()
 
 	data, err := io.ReadAll(r.Body)
 	if err != nil {

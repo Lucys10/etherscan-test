@@ -2,16 +2,17 @@ package handlers
 
 import (
 	"apietherscan/internal/store"
+	"apietherscan/pkg/logger"
 	"encoding/json"
-	"fmt"
 	"github.com/go-chi/chi/v5"
-	"log"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
 )
 
 type Handlers struct {
-	S store.Store
+	S    store.Store
+	Logs *logger.Log
 }
 
 func (h *Handlers) Register(r *chi.Mux) {
@@ -23,25 +24,47 @@ func (h *Handlers) Api(w http.ResponseWriter, r *http.Request) {
 	res := q.Get("block")
 
 	if res == "" {
-		fmt.Println("Enter block number")
+		w.WriteHeader(http.StatusBadRequest)
 	}
 
 	block, err := strconv.Atoi(res)
 	if err != nil {
-		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		h.Logs.WithFields(logrus.Fields{
+			"package":  "handlers",
+			"function": "api",
+			"error":    err,
+		}).Error("failed convert string to number")
 	}
 
 	listTransInfo, err := h.S.GetTransInfo(block)
 	if err != nil {
-		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		h.Logs.WithFields(logrus.Fields{
+			"package":  "handlers",
+			"function": "api",
+			"error":    err,
+		}).Error("failed insert to mongodb")
 	}
 
 	data, err := json.Marshal(listTransInfo)
 	if err != nil {
-		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		h.Logs.WithFields(logrus.Fields{
+			"package":  "handlers",
+			"function": "api",
+			"error":    err,
+		}).Error("failed marshal to json")
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+	if _, err := w.Write(data); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		h.Logs.WithFields(logrus.Fields{
+			"package":  "handlers",
+			"function": "api",
+			"error":    err,
+		}).Error("failed send response")
+	}
 }

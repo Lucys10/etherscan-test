@@ -7,11 +7,12 @@ import (
 	"apietherscan/internal/store"
 	"apietherscan/pkg/db"
 	"apietherscan/pkg/logger"
-	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/sirupsen/logrus"
 	"net/http"
 )
+
+const quantityBlock int64 = 1000
 
 func main() {
 
@@ -26,8 +27,6 @@ func main() {
 		}).Fatal("failed get config")
 	}
 
-	fmt.Println(cfg)
-
 	dbm, err := db.NewMongo(cfg.MongoPass)
 	if err != nil {
 		logs.WithFields(logrus.Fields{
@@ -39,10 +38,10 @@ func main() {
 
 	s := store.NewStore(dbm)
 	r := chi.NewRouter()
-	h := handlers.Handlers{S: s}
+	h := handlers.Handlers{S: s, Logs: logs}
 	h.Register(r)
 
-	block := etherscan.NewBlock(s, logs, cfg)
+	block := etherscan.NewBlock(s, logs, cfg, quantityBlock)
 
 	lastLoadBlock, err := block.LoadBlocks()
 	if err != nil {
@@ -56,9 +55,9 @@ func main() {
 	go block.UpdateBlocks(lastLoadBlock)
 
 	logs.WithFields(logrus.Fields{
-		"ServerAddress": ":8090",
+		"ServerAddress": cfg.Port,
 		"Log_level":     "Info",
-	}).Info("Start controller-service...")
+	}).Info("Start service Etherscan")
 
 	if err := http.ListenAndServe(":"+cfg.Port, r); err != nil {
 		logs.WithFields(logrus.Fields{
