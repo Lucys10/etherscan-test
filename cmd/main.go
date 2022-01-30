@@ -55,6 +55,8 @@ func main() {
 		}
 	}(cfg)
 
+	logs.Infof("Start server API on Port - %v", cfg.Port)
+
 	// загрузка последних 1000 блоков
 	lastLoadBlock, err := block.LoadBlocks()
 	if err != nil {

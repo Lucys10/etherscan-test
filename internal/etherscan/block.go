@@ -77,7 +77,6 @@ func (b *Block) LoadBlocks() (int64, error) {
 			allTransInfo = append(allTransInfo, ti)
 		}
 
-		b.Logs.Info("load block - ", i)
 		time.Sleep(time.Millisecond * 300)
 	}
 
