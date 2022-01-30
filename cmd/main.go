@@ -60,7 +60,7 @@ func main() {
 		"Log_level":     "Info",
 	}).Info("Start controller-service...")
 
-	if err := http.ListenAndServe(cfg.Port, r); err != nil {
+	if err := http.ListenAndServe(":"+cfg.Port, r); err != nil {
 		logs.WithFields(logrus.Fields{
 			"package":  "main",
 			"function": "ListenAndServe",
